@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Reguły dla listy prezentów Zojki.
+// Każdy z linkiem może zobaczyć, co już kupiono, i oznaczyć prezent jako kupiony.
+// Nikt ze strony nie może cofnąć ani zmienić oznaczenia: to robi się w konsoli Firebase
+// (Firestore Database → kupione → usuń dokument).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /kupione/{giftId} {
+      allow read: if true;
+
+      allow create: if giftId.matches('^g[0-9]{2}$')
+        && request.resource.data.keys().hasOnly(['kupione', 'kiedy'])
+        && request.resource.data.kupione == true
+        && request.resource.data.kiedy == request.time;
+
+      allow update, delete: if false;
+    }
+
+    // Wszystko inne zamknięte.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

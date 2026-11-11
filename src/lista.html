@@ -202,7 +202,7 @@ const IMAGES = /*IMAGES*/{};
 
 const bought = new Set();    // ids marked as purchased (from the shared store)
 const selected = new Set();   // ids ticked in this view, not yet confirmed
-let db = null, me = null, canWrite = false, isEditor = false, confirming = false, saving = false;
+let me = null, canWrite = false, isEditor = false, confirming = false, saving = false;
 
 const $ = (id) => document.getElementById(id);
 const listEl = $("gifts"), statusEl = $("status");
@@ -305,50 +305,96 @@ function toast(msg) {
   clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 3200);
 }
 
+// Where "kupione" is stored: the claude.ai artifact database when the page runs on claude.ai,
+// otherwise (e.g. GitHub Pages) the Firestore database of the Firebase project below.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCuIGurmK1HgFav0xk5UjmbkspGOKPtCjU",
+  authDomain: "prezenty-zojki.firebaseapp.com",
+  projectId: "prezenty-zojki",
+  storageBucket: "prezenty-zojki.firebasestorage.app",
+  messagingSenderId: "717941638026",
+  appId: "1:717941638026:web:2aea6aa2539af651c2be73",
+};
+const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/11.0.2/";
+
+let store = null; // { mark(id), unmark(id) }
+
 async function save() {
-  if (!db || saving) return;
+  if (!store || saving) return;
   saving = true; renderBar();
   const ids = [...selected];
   let ok = 0, failed = 0;
   for (const id of ids) {
-    try {
-      await db.collection("kupione").doc(id).set({ kupione: true, kiedy: new Date().toISOString(), kto: me || "" });
-      bought.add(id); selected.delete(id); ok++;
-    } catch (e) { failed++; }
+    if (bought.has(id)) { selected.delete(id); continue; }
+    try { await store.mark(id); bought.add(id); selected.delete(id); ok++; }
+    catch (e) { console.error(e); failed++; }
   }
   saving = false; confirming = false; render();
-  if (failed) setStatus(`Nie udało się zapisać ${plural(failed)}. Spróbuj jeszcze raz.`, true);
-  else toast(ok === 1 ? "Zapisano. Dziękujemy, pomocniku Mikołaja!" : `Zapisano ${plural(ok)}. Dziękujemy!`);
+  if (failed) setStatus(`Nie udało się zapisać ${plural(failed)}. Może ktoś właśnie go kupił. Odśwież stronę i spróbuj jeszcze raz.`, true);
+  else if (ok) toast(ok === 1 ? "Zapisano. Dziękujemy, pomocniku Mikołaja!" : `Zapisano ${plural(ok)}. Dziękujemy!`);
 }
 
 async function undo(id) {
-  if (!db) return;
-  try { await db.collection("kupione").doc(id).delete(); bought.delete(id); render(); toast("Przywrócono na listę."); }
+  if (!store || !store.unmark) return;
+  try { await store.unmark(id); bought.delete(id); render(); toast("Przywrócono na listę."); }
   catch (e) { setStatus("Nie udało się cofnąć. Spróbuj jeszcze raz.", true); }
+}
+
+function applySnapshot(docs) {
+  bought.clear();
+  for (const d of docs) if (d.data && d.data.kupione) bought.add(d.id);
+  for (const id of [...selected]) if (bought.has(id)) selected.delete(id);
+  render();
+}
+
+async function connectClaude(claude) {
+  const [dbNs, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  if (!dbNs) { setStatus("Zaloguj się w Claude, żeby zobaczyć, co już kupiono, i zaznaczać prezenty.", true); return; }
+  if (user) {
+    try { me = await user.id(); } catch (e) {}
+    try { isEditor = !!user.canEdit(); } catch (e) {}
+    try { const c = user.can("data.write"); canWrite = c === null ? true : !!c; } catch (e) { canWrite = true; }
+  } else canWrite = true;
+  const col = dbNs.collection("kupione");
+  store = {
+    mark: (id) => col.doc(id).set({ kupione: true, kiedy: new Date().toISOString(), kto: me || "" }),
+    unmark: (id) => col.doc(id).delete(),
+  };
+  const timer = setTimeout(() => setStatus("Nie mogę na razie połączyć się z listą. Zaznaczenia mogą być nieaktualne.", true), 10000);
+  col.onSnapshot((snap) => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    setStatus(canWrite ? "" : "Masz dostęp tylko do podglądu. Poproś o uprawnienia do edycji, żeby zaznaczać prezenty.", !canWrite);
+    applySnapshot(snap.docs.map((d) => ({ id: d.id, data: d.data() })));
+  }, () => { clearTimeout(timer); setStatus("Nie udało się wczytać listy kupionych prezentów. Odśwież stronę.", true); });
+}
+
+async function connectFirebase() {
+  const [{ initializeApp }, fs] = await Promise.all([
+    import(FIREBASE_SDK + "firebase-app.js"),
+    import(FIREBASE_SDK + "firebase-firestore.js"),
+  ]);
+  const fdb = fs.getFirestore(initializeApp(FIREBASE_CONFIG));
+  const col = fs.collection(fdb, "kupione");
+  canWrite = true;
+  // Rules allow only creating a "bought" mark; undoing one is done in the Firebase console.
+  store = { mark: (id) => fs.setDoc(fs.doc(col, id), { kupione: true, kiedy: fs.serverTimestamp() }) };
+  const timer = setTimeout(() => setStatus("Nie mogę na razie połączyć się z listą. Zaznaczenia mogą być nieaktualne.", true), 10000);
+  fs.onSnapshot(col, (snap) => {
+    clearTimeout(timer); setStatus("");
+    applySnapshot(snap.docs.map((d) => ({ id: d.id, data: d.data() })));
+  }, (e) => { console.error(e); clearTimeout(timer); setStatus("Nie udało się wczytać listy kupionych prezentów. Odśwież stronę.", true); });
 }
 
 render();
 
 (async () => {
   const claude = window.claude;
-  if (!claude || !claude.use) { setStatus("Zaloguj się w Claude, żeby zobaczyć, co już kupiono, i zaznaczać prezenty.", true); return; }
-  const [dbNs, user] = await Promise.all([claude.use("db"), claude.use("user")]);
-  if (!dbNs) { setStatus("Zaloguj się w Claude, żeby zobaczyć, co już kupiono, i zaznaczać prezenty.", true); return; }
-  db = dbNs;
-  if (user) {
-    try { me = await user.id(); } catch (e) {}
-    try { isEditor = !!user.canEdit(); } catch (e) {}
-    try { const c = user.can("data.write"); canWrite = c === null ? true : !!c; } catch (e) { canWrite = true; }
-  } else canWrite = true;
-
-  const timer = setTimeout(() => setStatus("Nie mogę na razie połączyć się z listą. Zaznaczenia mogą być nieaktualne.", true), 10000);
-  db.collection("kupione").onSnapshot((snap) => {
-    if (!snap.metadata.fromCache) clearTimeout(timer);
-    bought.clear();
-    for (const d of snap.docs) { const v = d.data(); if (v && v.kupione) bought.add(d.id); }
-    for (const id of [...selected]) if (bought.has(id)) selected.delete(id);
-    setStatus(canWrite ? "" : "Masz dostęp tylko do podglądu. Poproś o uprawnienia do edycji, żeby zaznaczać prezenty.", !canWrite);
-    render();
-  }, (e) => { clearTimeout(timer); setStatus("Nie udało się wczytać listy kupionych prezentów. Odśwież stronę.", true); });
+  try {
+    if (claude && claude.use) await connectClaude(claude);
+    else await connectFirebase();
+  } catch (e) {
+    console.error(e);
+    setStatus("Nie udało się połączyć z listą kupionych prezentów. Odśwież stronę.", true);
+  }
 })();
 </script>
