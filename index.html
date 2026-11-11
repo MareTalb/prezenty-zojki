@@ -145,7 +145,7 @@ ul.gifts { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
   text-transform: uppercase; color: var(--berry); background: var(--berry-soft); border-radius: 999px; padding: 2px 8px;
   vertical-align: 2px; text-decoration: none;
 }
-.undo { background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.8rem; text-decoration: underline; cursor: pointer; padding: 0; margin-left: 8px; }
+.undo { background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.8rem; text-decoration: underline; cursor: pointer; padding: 0; }
 
 .bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
@@ -344,17 +344,15 @@ function giftItem(g) {
     if (done) {
       const b = document.createElement("span"); b.className = "badge"; b.textContent = "Kupione"; lab.appendChild(b);
     }
-    const shop = document.createElement("span"); shop.className = "shop"; shop.textContent = g.shop;
-    if (done && isEditor) {
-      const u = document.createElement("button"); u.className = "undo"; u.type = "button";
-      u.textContent = "cofnij"; u.addEventListener("click", () => undo(g.id));
-      shop.appendChild(u);
-    }
-
     const a = document.createElement("a"); a.className = "link"; a.href = g.url; a.target = "_blank"; a.rel = "noopener";
     a.textContent = "Zobacz w sklepie ↗";
     if (done) a.tabIndex = -1;
-    info.append(lab, shop, a);
+    info.append(lab, a);
+    if (done && isEditor) {
+      const u = document.createElement("button"); u.className = "undo"; u.type = "button";
+      u.textContent = "cofnij"; u.addEventListener("click", () => undo(g.id));
+      info.appendChild(u);
+    }
 
     li.append(thumb, info, pick);
     return li;
