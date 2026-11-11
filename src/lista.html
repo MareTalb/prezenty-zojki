@@ -1,0 +1,340 @@
+<title>Lista Zoji do Mikołaja</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: a single letter column — handwritten note on top, then the gift list as a checklist; a confirm bar slides up from the bottom. */
+:root {
+  --bg: #f3f5f1;
+  --paper: #ffffff;
+  --ink: #1f2a24;
+  --muted: #5f6f66;
+  --line: #dde4de;
+  --pine: #1f5c45;
+  --pine-soft: #e3efe8;
+  --berry: #b8323f;
+  --berry-soft: #f8e4e6;
+  --done-bg: #eef0ee;
+  --done-ink: #8a948e;
+  --hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
+  --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+/* Always light, regardless of the viewer's system theme. */
+:root, :root[data-theme] { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 140px;
+}
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+.letter {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+  padding: 28px clamp(20px, 5vw, 40px) 26px; position: relative; overflow: hidden;
+}
+.letter::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 8px;
+  background: repeating-linear-gradient(135deg, var(--berry) 0 14px, var(--paper) 14px 22px, var(--pine) 22px 36px, var(--paper) 36px 44px);
+}
+.to { font-family: var(--hand); font-size: clamp(2.2rem, 7vw, 3rem); line-height: 1.05; color: var(--berry); margin: 6px 0 12px; font-weight: 700; text-wrap: balance; }
+.letter p { margin: 0 0 10px; max-width: 60ch; }
+.sign { font-family: var(--hand); font-size: 1.9rem; color: var(--pine); margin-top: 6px; line-height: 1; }
+.howto {
+  margin-top: 18px; padding: 14px 16px; background: var(--pine-soft); border-radius: 10px;
+  font-size: 0.95rem; color: var(--ink);
+}
+.howto strong { color: var(--pine); }
+
+.listhead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.listhead h2 { margin: 0; font-size: 1.25rem; font-weight: 800; }
+.count { color: var(--muted); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.status { font-size: 0.9rem; color: var(--muted); }
+.status.warn { color: var(--berry); }
+
+ul.gifts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.gift {
+  display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: 16px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px;
+  transition: border-color .15s, background .15s;
+}
+.gift.selected { border-color: var(--pine); background: var(--pine-soft); box-shadow: 0 0 0 1px var(--pine) inset; }
+.thumb {
+  width: 112px; height: 112px; border-radius: 10px; background: #fff; overflow: hidden;
+  display: grid; place-items: center; border: 1px solid var(--line);
+}
+.thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.thumb.ph { background: var(--berry-soft); color: var(--berry); border-color: transparent; }
+.thumb.ph svg { width: 44%; height: 44%; }
+.gift.done .thumb { filter: grayscale(1); opacity: .45; }
+.gift .info { min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.gift .name { font-weight: 700; display: block; overflow-wrap: anywhere; line-height: 1.3; }
+.gift .shop { color: var(--muted); font-size: 0.85rem; }
+.gift label { cursor: pointer; }
+.pick { display: grid; place-items: center; width: 48px; height: 48px; cursor: pointer; }
+.pick input[type=checkbox] { width: 28px; height: 28px; accent-color: var(--pine); cursor: pointer; margin: 0; }
+.pick input:disabled { cursor: not-allowed; }
+.link {
+  margin-top: 4px; font-weight: 700; font-size: 0.88rem; color: var(--pine); text-decoration: none; white-space: nowrap;
+  border: 1.5px solid currentColor; border-radius: 999px; padding: 6px 12px; min-height: 36px; display: inline-flex; align-items: center;
+}
+.link:hover { background: var(--pine-soft); }
+.link:focus-visible, .gift input:focus-visible, button:focus-visible { outline: 3px solid var(--berry); outline-offset: 2px; }
+
+.gift.done { background: var(--done-bg); border-color: var(--line); }
+.gift.done .name { color: var(--done-ink); text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.gift.done .shop, .gift.done .link { color: var(--done-ink); }
+.gift.done .link { pointer-events: none; border-style: dashed; }
+.badge {
+  display: inline-block; margin-left: 8px; font-size: 0.72rem; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--berry); background: var(--berry-soft); border-radius: 999px; padding: 2px 8px;
+  vertical-align: 2px; text-decoration: none;
+}
+.undo { background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.8rem; text-decoration: underline; cursor: pointer; padding: 0; margin-left: 8px; }
+
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--paper); border-top: 1px solid var(--line); box-shadow: 0 -8px 24px rgba(0,0,0,.08);
+}
+.bar-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.bar-text { font-weight: 700; min-width: 0; }
+.bar-text small { display: block; font-weight: 400; color: var(--muted); }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+button.primary, button.ghost {
+  font: inherit; font-weight: 800; border-radius: 999px; padding: 10px 18px; cursor: pointer; border: 2px solid var(--berry);
+}
+button.primary { background: var(--berry); color: #fff; }
+button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+button:disabled { opacity: .6; cursor: wait; }
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 30;
+  background: var(--pine); color: var(--paper); font-weight: 700; padding: 10px 18px; border-radius: 999px; max-width: calc(100% - 32px);
+}
+@media (max-width: 520px) {
+  body { padding-block: 16px 140px; font-size: 15px; }
+  .wrap { gap: 20px; }
+  .letter { padding: 22px 18px 18px; }
+  .gift { grid-template-columns: 84px minmax(0, 1fr) 44px; gap: 12px; padding: 10px; }
+  .thumb { width: 84px; height: 84px; }
+  .pick { width: 44px; height: 44px; }
+  .bar-inner { flex-direction: column; align-items: stretch; gap: 10px; }
+  .btns { display: grid; grid-template-columns: 2fr 1fr; }
+  button.primary, button.ghost { padding: 12px 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <section class="letter">
+    <div class="to">Kochany Mikołaju!</div>
+    <p>Tu Zojka. W tym roku byłam bardzo grzeczna (prawie zawsze). Bardzo lubię Bluey, zwierzątka z farmy, klocki, gotowanie i bawienie się w lekarza, więc przygotowałam razem z rodzicami listę rzeczy, które by mnie ucieszyły.</p>
+    <p>Nie musisz przynosić wszystkiego. Wystarczy coś jednego. Dziękuję!</p>
+    <div class="sign">Buziaki, Zojka</div>
+    <div class="howto">
+      <strong>Dla pomocników Mikołaja:</strong> zaznacz prezent, który kupiłeś lub kupiłaś, i kliknij <strong>Zatwierdź</strong>. Prezent zostanie oznaczony jako kupiony dla całej rodziny, żeby nic się nie powtórzyło. Możesz zaznaczyć kilka naraz.
+    </div>
+  </section>
+
+  <section>
+    <div class="listhead">
+      <h2>Lista prezentów</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <p class="status" id="status">Wczytuję, co już zostało kupione…</p>
+    <ul class="gifts" id="gifts"></ul>
+  </section>
+</div>
+
+<div class="bar" id="bar" hidden>
+  <div class="bar-inner">
+    <div class="bar-text" id="barText"></div>
+    <div class="btns" id="btns"></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const GIFTS = [
+  { id: "g01", name: "Metalowy bębenek językowy Tambu – Baby Pinky Winky", shop: "edukatorek.pl", url: "https://edukatorek.pl/instrumenty_muzyczne/31442-baby-pinky-winky-metalowy-bebenek-jezykowy-tambu-jctmb06p-tambu.html" },
+  { id: "g02", name: "Odkurzacz Dyson dla dzieci ze światłem i dźwiękiem – Casdon", shop: "empik.com", url: "https://www.empik.com/odkurzacz-dyson-detect-pionowy-dla-dzieci-z-dzwiekiem-i-swiatlem-bezprzewodowy-casdon-casdon,p1799438250,zabawki-p" },
+  { id: "g03", name: "Zestaw lekarza dla dzieci – Le Toy Van", shop: "prostezabawki.com.pl", url: "https://prostezabawki.com.pl/pl/p/Le-Toy-Van-zestaw-lekarza-dla-dzieci/7110" },
+  { id: "g04", name: "Dwustronna tablica magnetyczna Bluey – literki i obrazki", shop: "mintnation.pl", url: "https://www.mintnation.pl/dwustronna-magnetyczna-tablica-literki-i-obrazki-edukacyjna-zabawka-bluey.html" },
+  { id: "g05", name: "Zestaw do serwowania herbaty Bluey", shop: "mintnation.pl", url: "https://www.mintnation.pl/zestaw-do-serwowania-herbaty-zabawka-dla-dzieci-bluey-kubki-akcesoria.html" },
+  { id: "g06", name: "Domek Stodoła Little Farm – Little Dutch", shop: "babyconcept.pl", url: "https://www.babyconcept.pl/Domek-Stodola-Little-Farm-Little-Dutch" },
+  { id: "g07", name: "Pierwsze flamastry dziecka Dot Art", shop: "allegro.pl", url: "https://allegro.pl/oferta/pierwsze-flamastry-dziecka-do-malowania-kolorowania-i-nauki-do-a-dot-art-18788427702" },
+  { id: "g08", name: "Sensoryczna gra sortująca Sort Again – Fat Brain", shop: "kidero.pl", url: "https://kidero.pl/produkt/463204-fat-brain-sensoryczna-gra-sortujaca-sort-again" },
+  { id: "g09", name: "Muzyczna gra z młotkiem „Wesoła krówka” – B. Toys", shop: "allegro.pl", url: "https://allegro.pl/produkt/b-toys-muzyczna-gra-zrecznosciowa-z-mlotkiem-wesola-krowka-lap-witaminy-f210e6ee-e6d3-4bf9-a1b7-ad8d3b6213b2?offerId=18789648870" },
+  { id: "g10", name: "Crayola Color Wonder Bluey – niebrudzące stemple", shop: "smyk.com", url: "https://www.smyk.com/pl/pl/p/crayola-color-wonder-mess-free-bluey-podswietlane-niebrudzace-stemple-10-szt-i8348714" },
+  { id: "g11", name: "Interaktywny zestaw dentysty Hippodontist – Battat", shop: "majolinek.pl", url: "https://majolinek.pl/23063-interaktywny-zestaw-dentysta-battat-hippodontist.html" },
+  { id: "g12", name: "Drewniana gra memo Bluey", shop: "allegro.pl", url: "https://allegro.pl/oferta/memo-drewniana-gra-bluey-17526307380" },
+  { id: "g13", name: "Mini domek z bali z figurkami – Egmont Toys", shop: "klocki.edu.pl", url: "https://klocki.edu.pl/pl/products/zabawki-wg-producentow/mini-domek-z-bali-dla-dzieci-z-figurkami-egmont-toys-18m-2236" },
+  { id: "g14", name: "Odkrywcza kuchnia – Dumel", shop: "empik.com", url: "https://www.empik.com/odkrywcza-kuchnia-dumel,p1786905530,zabawki-p" },
+  { id: "g15", name: "Interaktywny jeżyk – Clementoni", shop: "odbrzuszkadomaluszka.com", url: "https://odbrzuszkadomaluszka.com/produkt/clementoni-interaktywny-jezyk/" },
+  { id: "g16", name: "Fisher-Price „Ucz się i śmiej” – odkurzacz malucha 2 w 1", shop: "empik.com", url: "https://www.empik.com/fisher-price-ucz-sie-i-smiej-odkurzacz-malucha-2-w-1-zabawka-edukacyjna-polska-wersja-jezykowa-mattel,p1703239221,zabawki-p" },
+  { id: "g17", name: "Kamienie sensoryczne – 6 krążków do nauki równowagi", shop: "allegro.pl", url: "https://allegro.pl/oferta/zestaw-6-krazkow-kamieni-sensorycznych-do-zabaw-ruchowych-nauka-rownowagi-18275203568" },
+  { id: "g18", name: "LEGO Duplo 10984 – Uprawiany ogród", shop: "allegro.pl", url: "https://allegro.pl/produkt/klocki-10984-lego-duplo-uprawiany-ogrod-43-elementy-18-m-w-pudelku-box-0270b380-0f4f-470a-a4fa-e56e247a0075?offerId=17157110601" },
+  { id: "g19", name: "LEGO Duplo – Traktor z warzywami i owocami", shop: "allegro.pl", url: "https://allegro.pl/produkt/klocki-lego-duplo-traktor-z-warzywami-i-owocami-19-el-18-m-be25fd9b-7cf7-457b-9e5e-66ab323a63df?offerId=16707740939" },
+  { id: "g20", name: "Leśny domek Fairy Garden z figurkami wróżek – Little Dutch", shop: "mediaexpert.pl", url: "https://www.mediaexpert.pl/zabawki/lalki-i-figurki/lalki-i-akcesoria/domek-dla-lalek-little-dutch-lesny-domek-fairy-garden-ld7360" },
+  { id: "g21", name: "Kicia Kocia: Mój dom – gra edukacyjna Trefl", shop: "smyk.com", url: "https://www.smyk.com/pl/pl/p/trefl-kicia-kocia-moj-dom-gra-edukacyjna-i6872481" },
+  { id: "g22", name: "CzuCzu Moto puzzle – Traktor, 24 elementy", shop: "smyk.com", url: "https://www.smyk.com/pl/pl/p/czuczu-moto-puzzle-traktor-24-elementy-i7804698" },
+  { id: "g23", name: "Smiki – interaktywny wóz policyjny z akcesoriami", shop: "smyk.com", url: "https://www.smyk.com/pl/pl/p/smiki-woz-policyjny-pojazd-interaktywny-z-akcesoriami-i8298223" },
+  { id: "g24", name: "LEGO Duplo 10453 – Wesołe miasteczko", shop: "smyk.com", url: "https://www.smyk.com/pl/pl/p/lego-duplo-wesole-miasteczko-10453-i7914375" },
+  { id: "g25", name: "LEGO Duplo 10427 – Przygoda z interaktywnym pociągiem", shop: "smyk.com", url: "https://www.smyk.com/pl/pl/p/lego-duplo-przygoda-z-interaktywnym-pociagiem-zabawka-10427-i7749291" },
+];
+
+const IMAGES = /*IMAGES*/{};
+
+const bought = new Set();    // ids marked as purchased (from the shared store)
+const selected = new Set();   // ids ticked in this view, not yet confirmed
+let db = null, me = null, canWrite = false, isEditor = false, confirming = false, saving = false;
+
+const $ = (id) => document.getElementById(id);
+const listEl = $("gifts"), statusEl = $("status");
+
+function setStatus(text, warn) {
+  statusEl.textContent = text || "";
+  statusEl.hidden = !text;
+  statusEl.classList.toggle("warn", !!warn);
+}
+
+function render() {
+  listEl.textContent = "";
+  for (const g of GIFTS) {
+    const done = bought.has(g.id);
+    const li = document.createElement("li");
+    li.className = "gift" + (done ? " done" : "") + (selected.has(g.id) ? " selected" : "");
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.id = "cb-" + g.id;
+    cb.checked = done || selected.has(g.id);
+    cb.disabled = done || !canWrite || saving;
+    cb.addEventListener("change", () => {
+      if (cb.checked) selected.add(g.id); else selected.delete(g.id);
+      confirming = false; render();
+    });
+
+    const pick = document.createElement("label"); pick.className = "pick"; pick.htmlFor = cb.id;
+    pick.setAttribute("aria-label", "Zaznacz: " + g.name);
+    pick.appendChild(cb);
+
+    const thumb = document.createElement("label"); thumb.htmlFor = cb.id;
+    thumb.className = "thumb" + (IMAGES[g.id] ? "" : " ph");
+    if (IMAGES[g.id]) {
+      const img = document.createElement("img"); img.src = IMAGES[g.id]; img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+      thumb.appendChild(img);
+    } else {
+      thumb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="1.5"/><path d="M12 8v13M3 12h18"/><path d="M12 8c-1.5-3-5-4-5.5-1.8C6 8 9 8 12 8zM12 8c1.5-3 5-4 5.5-1.8C18 8 15 8 12 8z"/></svg>';
+    }
+
+    const info = document.createElement("div"); info.className = "info";
+    const lab = document.createElement("label"); lab.htmlFor = cb.id; lab.className = "name";
+    lab.textContent = g.name;
+    if (done) {
+      const b = document.createElement("span"); b.className = "badge"; b.textContent = "Kupione"; lab.appendChild(b);
+    }
+    const shop = document.createElement("span"); shop.className = "shop"; shop.textContent = g.shop;
+    if (done && isEditor) {
+      const u = document.createElement("button"); u.className = "undo"; u.type = "button";
+      u.textContent = "cofnij"; u.addEventListener("click", () => undo(g.id));
+      shop.appendChild(u);
+    }
+
+    const a = document.createElement("a"); a.className = "link"; a.href = g.url; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = "Zobacz w sklepie ↗";
+    if (done) a.tabIndex = -1;
+    info.append(lab, shop, a);
+
+    li.append(thumb, info, pick);
+    listEl.appendChild(li);
+  }
+  $("count").textContent = `Kupione: ${bought.size} z ${GIFTS.length}`;
+  renderBar();
+}
+
+function plural(n) {
+  if (n === 1) return "1 prezent";
+  const d = n % 10, t = n % 100;
+  return n + ((d >= 2 && d <= 4 && (t < 12 || t > 14)) ? " prezenty" : " prezentów");
+}
+
+function renderBar() {
+  const n = selected.size, bar = $("bar"), btns = $("btns"), txt = $("barText");
+  bar.hidden = n === 0;
+  if (!n) return;
+  btns.textContent = "";
+  if (!confirming) {
+    txt.textContent = `Zaznaczono: ${plural(n)}`;
+    const ok = document.createElement("button"); ok.className = "primary"; ok.type = "button"; ok.id = "btn-confirm";
+    ok.textContent = "Zatwierdź zakup";
+    ok.addEventListener("click", () => { confirming = true; renderBar(); });
+    const cancel = document.createElement("button"); cancel.className = "ghost"; cancel.type = "button"; cancel.id = "btn-clear";
+    cancel.textContent = "Wyczyść";
+    cancel.addEventListener("click", () => { selected.clear(); render(); });
+    btns.append(ok, cancel);
+  } else {
+    txt.textContent = `Oznaczyć ${plural(n)} jako kupione?`;
+    const s = document.createElement("small"); s.textContent = "Wszyscy zobaczą je jako niedostępne."; txt.appendChild(s);
+    const yes = document.createElement("button"); yes.className = "primary"; yes.type = "button"; yes.id = "btn-yes";
+    yes.textContent = saving ? "Zapisuję…" : "Tak, kupione"; yes.disabled = saving;
+    yes.addEventListener("click", save);
+    const back = document.createElement("button"); back.className = "ghost"; back.type = "button"; back.id = "btn-back";
+    back.textContent = "Wróć"; back.disabled = saving;
+    back.addEventListener("click", () => { confirming = false; renderBar(); });
+    btns.append(yes, back);
+  }
+}
+
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 3200);
+}
+
+async function save() {
+  if (!db || saving) return;
+  saving = true; renderBar();
+  const ids = [...selected];
+  let ok = 0, failed = 0;
+  for (const id of ids) {
+    try {
+      await db.collection("kupione").doc(id).set({ kupione: true, kiedy: new Date().toISOString(), kto: me || "" });
+      bought.add(id); selected.delete(id); ok++;
+    } catch (e) { failed++; }
+  }
+  saving = false; confirming = false; render();
+  if (failed) setStatus(`Nie udało się zapisać ${plural(failed)}. Spróbuj jeszcze raz.`, true);
+  else toast(ok === 1 ? "Zapisano. Dziękujemy, pomocniku Mikołaja!" : `Zapisano ${plural(ok)}. Dziękujemy!`);
+}
+
+async function undo(id) {
+  if (!db) return;
+  try { await db.collection("kupione").doc(id).delete(); bought.delete(id); render(); toast("Przywrócono na listę."); }
+  catch (e) { setStatus("Nie udało się cofnąć. Spróbuj jeszcze raz.", true); }
+}
+
+render();
+
+(async () => {
+  const claude = window.claude;
+  if (!claude || !claude.use) { setStatus("Zaloguj się w Claude, żeby zobaczyć, co już kupiono, i zaznaczać prezenty.", true); return; }
+  const [dbNs, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  if (!dbNs) { setStatus("Zaloguj się w Claude, żeby zobaczyć, co już kupiono, i zaznaczać prezenty.", true); return; }
+  db = dbNs;
+  if (user) {
+    try { me = await user.id(); } catch (e) {}
+    try { isEditor = !!user.canEdit(); } catch (e) {}
+    try { const c = user.can("data.write"); canWrite = c === null ? true : !!c; } catch (e) { canWrite = true; }
+  } else canWrite = true;
+
+  const timer = setTimeout(() => setStatus("Nie mogę na razie połączyć się z listą. Zaznaczenia mogą być nieaktualne.", true), 10000);
+  db.collection("kupione").onSnapshot((snap) => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    bought.clear();
+    for (const d of snap.docs) { const v = d.data(); if (v && v.kupione) bought.add(d.id); }
+    for (const id of [...selected]) if (bought.has(id)) selected.delete(id);
+    setStatus(canWrite ? "" : "Masz dostęp tylko do podglądu. Poproś o uprawnienia do edycji, żeby zaznaczać prezenty.", !canWrite);
+    render();
+  }, (e) => { clearTimeout(timer); setStatus("Nie udało się wczytać listy kupionych prezentów. Odśwież stronę.", true); });
+})();
+</script>
