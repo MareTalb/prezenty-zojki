@@ -16,6 +16,9 @@
   --berry-soft: #f8e4e6;
   --done-bg: #eef0ee;
   --done-ink: #8a948e;
+  --gold: #c98f1a;
+  --gold-soft: #fbf1dc;
+  --snow: #b9cbd8;
   --hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
   --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -28,7 +31,32 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 32px 140px;
 }
-.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; position: relative; z-index: 1; }
+
+/* Festive touches */
+#snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.garland {
+  height: 34px; margin: 0 -4px 2px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='34'%3E%3Cpath d='M0 4 Q30 18 60 4 Q90 18 120 4 Q150 18 180 4' fill='none' stroke='%234a5a50' stroke-width='1.6'/%3E%3Cg%3E%3Crect x='27' y='9' width='6' height='5' rx='1' fill='%234a5a50'/%3E%3Cellipse cx='30' cy='21' rx='6' ry='8' fill='%23b8323f'/%3E%3Cellipse cx='28' cy='18' rx='1.8' ry='3' fill='%23ffffff' opacity='.55'/%3E%3C/g%3E%3Cg%3E%3Crect x='87' y='9' width='6' height='5' rx='1' fill='%234a5a50'/%3E%3Cellipse cx='90' cy='21' rx='6' ry='8' fill='%23e0a526'/%3E%3Cellipse cx='88' cy='18' rx='1.8' ry='3' fill='%23ffffff' opacity='.55'/%3E%3C/g%3E%3Cg%3E%3Crect x='147' y='9' width='6' height='5' rx='1' fill='%234a5a50'/%3E%3Cellipse cx='150' cy='21' rx='6' ry='8' fill='%232c7a5a'/%3E%3Cellipse cx='148' cy='18' rx='1.8' ry='3' fill='%23ffffff' opacity='.55'/%3E%3C/g%3E%3C/svg%3E") repeat-x left top;
+  position: relative; z-index: 2;
+}
+.stamp {
+  float: right; width: 86px; margin: 4px 0 10px 14px; padding: 6px 6px 5px;
+  background: var(--paper); border: 2px dashed var(--berry); border-radius: 4px;
+  transform: rotate(4deg); text-align: center; color: var(--berry);
+  font-size: 0.56rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; line-height: 1.2;
+}
+.stamp svg { display: block; width: 100%; height: auto; margin-bottom: 3px; }
+.countdown {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
+  background: var(--gold-soft); color: #7a5410; border-radius: 999px; padding: 6px 14px 6px 10px;
+  font-weight: 700; font-size: 0.92rem; font-variant-numeric: tabular-nums;
+}
+.countdown svg { width: 18px; height: 18px; flex: none; color: var(--gold); }
+.foot { text-align: center; color: var(--pine); display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 8px; }
+.foot svg { width: 44px; height: auto; }
+.foot .wish { font-family: var(--hand); font-size: 2rem; line-height: 1; color: var(--berry); }
+.foot small { color: var(--muted); font-size: 0.88rem; }
 
 .letter {
   background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
@@ -136,6 +164,7 @@ button:disabled { opacity: .6; cursor: wait; }
   body { padding-block: 16px 140px; font-size: 15px; }
   .wrap { gap: 20px; }
   .letter { padding: 22px 18px 18px; }
+  .stamp { width: 70px; margin-left: 10px; }
   .gift { grid-template-columns: 84px minmax(0, 1fr) 44px; gap: 12px; padding: 10px; }
   .thumb { width: 84px; height: 84px; }
   .pick { width: 44px; height: 44px; }
@@ -146,16 +175,28 @@ button:disabled { opacity: .6; cursor: wait; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
+<canvas id="snow" aria-hidden="true"></canvas>
 <div class="wrap">
+  <div>
+  <div class="garland" aria-hidden="true"></div>
   <section class="letter">
+    <div class="stamp" aria-hidden="true">
+      <svg viewBox="0 0 60 56"><rect width="60" height="56" rx="3" fill="#e3efe8"/><circle cx="12" cy="12" r="1.4" fill="#fff"/><circle cx="48" cy="9" r="1.2" fill="#fff"/><circle cx="52" cy="26" r="1.4" fill="#fff"/><circle cx="8" cy="30" r="1.2" fill="#fff"/><path d="M30 6 L44 26 H37 L48 40 H12 L23 26 H16 Z" fill="#1f5c45"/><rect x="27" y="40" width="6" height="7" fill="#7a5410"/><path d="M30 2.5 l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#e0a526"/><circle cx="24" cy="31" r="1.8" fill="#b8323f"/><circle cx="35" cy="22" r="1.6" fill="#e0a526"/><circle cx="37" cy="34" r="1.8" fill="#b8323f"/><path d="M0 50 Q15 45 30 50 T60 50 V56 H0Z" fill="#fff"/></svg>
+      Poczta<br>Bieguna Pn.
+    </div>
     <div class="to">Kochany Mikołaju!</div>
     <p>Tu Zojka. W tym roku byłam bardzo grzeczna (prawie zawsze). Bardzo lubię Bluey, Kicię Kocię i Pucia, zwierzątka z farmy, klocki, gotowanie i bawienie się w lekarza, więc przygotowałam razem z rodzicami listę rzeczy, które by mnie ucieszyły.</p>
     <p>Nie musisz przynosić wszystkiego. Wystarczy coś jednego. Dziękuję!</p>
     <div class="sign">Buziaki, Zojka</div>
+    <div class="countdown" id="countdown" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 16.8 6.1 20.1l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>
+      <span id="countdownText"></span>
+    </div>
     <div class="howto">
       <strong>Dla pomocników Mikołaja:</strong> zaznacz prezent, który kupiłeś lub kupiłaś, i kliknij <strong>Zatwierdź</strong>. Prezent zostanie oznaczony jako kupiony dla całej rodziny, żeby nic się nie powtórzyło. Możesz zaznaczyć kilka naraz.
     </div>
   </section>
+  </div>
 
   <section>
     <div class="listhead">
@@ -165,6 +206,12 @@ button:disabled { opacity: .6; cursor: wait; }
     <p class="status" id="status">Wczytuję, co już zostało kupione…</p>
     <div class="groups" id="gifts"></div>
   </section>
+
+  <footer class="foot">
+    <svg viewBox="0 0 44 50" aria-hidden="true"><path d="M22 3 L36 22 H29 L40 37 H4 L15 22 H8 Z" fill="currentColor"/><rect x="19" y="37" width="6" height="8" fill="#7a5410"/><circle cx="17" cy="28" r="2" fill="#b8323f"/><circle cx="27" cy="18" r="1.8" fill="#e0a526"/><circle cx="29" cy="31" r="2" fill="#e0a526"/><circle cx="21" cy="12" r="1.6" fill="#b8323f"/></svg>
+    <div class="wish">Wesołych Świąt!</div>
+    <small>Dziękujemy, że pomagasz Mikołajowi.</small>
+  </footer>
 </div>
 
 <div class="bar" id="bar" hidden>
@@ -424,7 +471,58 @@ async function connectFirebase() {
   }, (e) => { console.error(e); clearTimeout(timer); setStatus("Nie udało się wczytać listy kupionych prezentów. Odśwież stronę.", true); });
 }
 
+function showCountdown() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let eve = new Date(now.getFullYear(), 11, 24);
+  const day = 86400000;
+  const diff = Math.round((eve - today) / day);
+  let text = "";
+  if (diff > 1) text = `Do Wigilii zostało ${diff} dni`;
+  else if (diff === 1) text = "Wigilia już jutro!";
+  else if (diff === 0) text = "Dziś Wigilia!";
+  else if (diff >= -2) text = "Wesołych Świąt!";
+  if (!text) return;
+  $("countdownText").textContent = text;
+  $("countdown").hidden = false;
+}
+
+function startSnow() {
+  const canvas = $("snow");
+  if (!canvas.getContext || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) { canvas.hidden = true; return; }
+  const ctx = canvas.getContext("2d");
+  const color = getComputedStyle(document.documentElement).getPropertyValue("--snow").trim() || "#b9cbd8";
+  let w = 0, h = 0, flakes = [];
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = innerWidth; h = innerHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round(Math.min(60, Math.max(24, w / 18)));
+    flakes = Array.from({ length: n }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      r: 1 + Math.random() * 2.4, s: 0.25 + Math.random() * 0.55,
+      d: Math.random() * Math.PI * 2, a: 0.35 + Math.random() * 0.45,
+    }));
+  }
+  function tick() {
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = color;
+    for (const f of flakes) {
+      f.y += f.s; f.d += 0.01; f.x += Math.sin(f.d) * 0.3;
+      if (f.y > h + 4) { f.y = -4; f.x = Math.random() * w; }
+      ctx.globalAlpha = f.a;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  addEventListener("resize", resize);
+  resize(); tick();
+}
+
 render();
+showCountdown();
+startSnow();
 
 (async () => {
   const claude = window.claude;

@@ -22,7 +22,7 @@ head = (
     "body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>\n"
 )
 # Move <title>, <meta>, <link> and <style> from the top of the fragment into <head>.
-split = body.index("<div class=\"wrap\">")
+split = body.index("</style>") + len("</style>")
 (root / "index.html").write_text(
     head + body[:split] + "</head>\n<body>\n" + body[split:] + "\n</body>\n</html>\n", encoding="utf-8"
 )
