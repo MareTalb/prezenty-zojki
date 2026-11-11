@@ -263,7 +263,7 @@ function render() {
     li.append(thumb, info, pick);
     listEl.appendChild(li);
   }
-  $("count").textContent = `Kupione: ${bought.size} z ${GIFTS.length}`;
+  $("count").textContent = `Kupione: ${GIFTS.filter((g) => bought.has(g.id)).length} z ${GIFTS.length}`;
   renderBar();
 }
 
