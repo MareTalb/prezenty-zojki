@@ -53,12 +53,40 @@ body {
   font-size: 0.56rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; line-height: 1.2;
 }
 .stamp svg { display: block; width: 100%; height: auto; margin-bottom: 3px; }
-.countdown {
-  display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
-  background: var(--gold-soft); color: #7a5410; border-radius: 999px; padding: 6px 14px 6px 10px;
-  font-weight: 700; font-size: 0.92rem; font-variant-numeric: tabular-nums;
+/* Countdown to Christmas Eve: red tiles with snow caps on a snowy pine card */
+.advent {
+  position: relative; overflow: hidden; text-align: center; color: #fff;
+  background-color: var(--pine);
+  background-image:
+    radial-gradient(rgba(255,255,255,.22) 1.6px, transparent 2.2px),
+    radial-gradient(rgba(255,255,255,.12) 1px, transparent 1.6px);
+  background-size: 38px 38px, 23px 23px;
+  background-position: 0 0, 11px 17px;
+  border-radius: 16px; padding: 20px clamp(14px, 4vw, 32px) 18px;
 }
-.countdown svg { width: 18px; height: 18px; flex: none; color: var(--gold); }
+.advent-title {
+  font-family: var(--hand); font-weight: 700; font-size: clamp(2rem, 7vw, 2.6rem); line-height: 1.05;
+  color: #f6d27a; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.advent-title svg { width: 26px; height: 26px; flex: none; color: #f6d27a; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 2.5vw, 14px); max-width: 480px; margin: 0 auto; }
+.tile {
+  position: relative; background: var(--berry); border-radius: 12px; padding: 16px 2px 9px;
+  box-shadow: 0 5px 0 #7d1f29, 0 8px 18px rgba(0,0,0,.18);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.tile::before {
+  content: ""; position: absolute; left: -3px; right: -3px; top: -6px; height: 17px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 22' preserveAspectRatio='none'%3E%3Cpath d='M0 8 Q0 0 8 0 H92 Q100 0 100 8 V10 Q95 17 89 11 Q83 21 75 11 Q68 16 60 11 Q52 22 43 11 Q35 16 27 11 Q19 20 12 11 Q6 16 0 10 Z' fill='%23ffffff'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.08));
+}
+.tile b {
+  font-size: clamp(1.9rem, 9vw, 2.9rem); font-weight: 800; line-height: 1; color: #fff;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.tile span { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #ffd9dd; }
+.advent-date { margin-top: 16px; font-size: 0.9rem; color: #d9ebe1; }
+.advent-msg { font-family: var(--hand); font-weight: 700; font-size: clamp(2.2rem, 8vw, 3rem); color: #fff; line-height: 1.1; }
 .foot { text-align: center; color: var(--pine); display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 8px; }
 .foot svg { width: 44px; height: auto; }
 .foot .wish { font-family: var(--hand); font-size: 2rem; line-height: 1; color: var(--berry); }
@@ -196,15 +224,27 @@ button:disabled { opacity: .6; cursor: wait; }
     <p>Tu Zojka. W tym roku byłam bardzo grzeczna (prawie zawsze). Bardzo lubię Bluey, Kicię Kocię i Pucia, zwierzątka z farmy, klocki, gotowanie i bawienie się w lekarza, więc przygotowałam razem z rodzicami listę rzeczy, które by mnie ucieszyły.</p>
     <p>Nie musisz przynosić wszystkiego. Wystarczy coś jednego. Dziękuję!</p>
     <div class="sign">Buziaki, Zojka</div>
-    <div class="countdown" id="countdown" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 16.8 6.1 20.1l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>
-      <span id="countdownText"></span>
-    </div>
     <div class="howto">
       <strong>Dla pomocników Mikołaja:</strong> zaznacz prezent, który kupiłeś lub kupiłaś, i kliknij <strong>Zatwierdź</strong>. Prezent zostanie oznaczony jako kupiony dla całej rodziny, żeby nic się nie powtórzyło. Możesz zaznaczyć kilka naraz.
     </div>
   </section>
   </div>
+
+  <section class="advent" id="advent" hidden>
+    <div class="advent-title" id="adventTitle">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 16.8 6.1 20.1l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>
+      <span>Do Wigilii zostało</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 16.8 6.1 20.1l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>
+    </div>
+    <div class="tiles" id="tiles">
+      <div class="tile"><b id="cdD">–</b><span id="cdDL">dni</span></div>
+      <div class="tile"><b id="cdH">–</b><span>godz.</span></div>
+      <div class="tile"><b id="cdM">–</b><span>min</span></div>
+      <div class="tile"><b id="cdS">–</b><span>sek.</span></div>
+    </div>
+    <div class="advent-msg" id="adventMsg" hidden></div>
+    <div class="advent-date" id="adventDate"></div>
+  </section>
 
   <section>
     <div class="listhead">
@@ -477,20 +517,33 @@ async function connectFirebase() {
   }, (e) => { console.error(e); clearTimeout(timer); setStatus("Nie udało się wczytać listy kupionych prezentów. Odśwież stronę.", true); });
 }
 
+// Counts down to midnight starting 24 December (Wigilia). On 24–26 December it shows wishes;
+// from 27 December the block hides until next season.
 function showCountdown() {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let eve = new Date(now.getFullYear(), 11, 24);
-  const day = 86400000;
-  const diff = Math.round((eve - today) / day);
-  let text = "";
-  if (diff > 1) text = `Do Wigilii zostało ${diff} dni`;
-  else if (diff === 1) text = "Wigilia już jutro!";
-  else if (diff === 0) text = "Dziś Wigilia!";
-  else if (diff >= -2) text = "Wesołych Świąt!";
-  if (!text) return;
-  $("countdownText").textContent = text;
-  $("countdown").hidden = false;
+  const pad = (n) => String(n).padStart(2, "0");
+  const eve = new Date(new Date().getFullYear(), 11, 24);
+  const after = new Date(eve.getFullYear(), 11, 27);
+  $("adventDate").textContent = "Wigilia: " + eve.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" });
+  let timer = 0;
+  function tick() {
+    const now = new Date();
+    if (now >= after) { $("advent").hidden = true; clearInterval(timer); return; }
+    $("advent").hidden = false;
+    if (now >= eve) {
+      $("adventTitle").hidden = true; $("tiles").hidden = true; $("adventDate").hidden = true;
+      const msg = $("adventMsg"); msg.hidden = false;
+      msg.textContent = now.getDate() === 24 ? "Dziś Wigilia! Wesołych Świąt!" : "Wesołych Świąt!";
+      clearInterval(timer); return;
+    }
+    let s = Math.floor((eve - now) / 1000);
+    const d = Math.floor(s / 86400); s -= d * 86400;
+    const h = Math.floor(s / 3600); s -= h * 3600;
+    const m = Math.floor(s / 60); s -= m * 60;
+    $("cdD").textContent = d; $("cdDL").textContent = d === 1 ? "dzień" : "dni";
+    $("cdH").textContent = pad(h); $("cdM").textContent = pad(m); $("cdS").textContent = pad(s);
+  }
+  tick();
+  timer = setInterval(tick, 1000);
 }
 
 function startSnow() {
