@@ -53,6 +53,13 @@ body {
 .status { font-size: 0.9rem; color: var(--muted); }
 .status.warn { color: var(--berry); }
 
+.groups { display: flex; flex-direction: column; gap: 28px; margin-top: 18px; }
+.group h3 {
+  margin: 0 0 10px; font-size: 1.05rem; font-weight: 800; color: var(--pine);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding-bottom: 6px; border-bottom: 2px solid var(--pine-soft); text-wrap: balance;
+}
+.gcount { font-size: 0.82rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 ul.gifts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .gift {
   display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: 16px;
@@ -156,7 +163,7 @@ button:disabled { opacity: .6; cursor: wait; }
       <span class="count" id="count"></span>
     </div>
     <p class="status" id="status">Wczytuję, co już zostało kupione…</p>
-    <ul class="gifts" id="gifts"></ul>
+    <div class="groups" id="gifts"></div>
   </section>
 </div>
 
@@ -198,6 +205,16 @@ const GIFTS = [
   { id: "g26", name: "Bluey – interaktywna figurka „Zabawa w chowanego”", shop: "ceneo.pl", url: "https://www.ceneo.pl/196509177" },
 ];
 
+// Groups shown on the page, in this order. A gift missing from every group lands in "Inne".
+const CATEGORIES = [
+  { name: "Klocki", ids: ["g24", "g25", "g18", "g19", "g13"] },
+  { name: "Puzzle, gry i układanki", ids: ["g22", "g21", "g12", "g09", "g08"] },
+  { name: "Zabawa w dom, kuchnię i lekarza", ids: ["g14", "g05", "g02", "g16", "g03", "g11"] },
+  { name: "Domki, figurki i pojazdy", ids: ["g06", "g20", "g26", "g23"] },
+  { name: "Rysowanie i plastyka", ids: ["g07", "g10", "g04"] },
+  { name: "Muzyka, ruch i zabawki interaktywne", ids: ["g01", "g15", "g17"] },
+];
+
 const IMAGES = /*IMAGES*/{};
 
 const bought = new Set();    // ids marked as purchased (from the shared store)
@@ -215,7 +232,31 @@ function setStatus(text, warn) {
 
 function render() {
   listEl.textContent = "";
-  for (const g of GIFTS) {
+  const byId = new Map(GIFTS.map((g) => [g.id, g]));
+  const groups = CATEGORIES.map((c) => ({ name: c.name, items: c.ids.map((id) => byId.get(id)).filter(Boolean) }));
+  const placed = new Set(groups.flatMap((gr) => gr.items.map((g) => g.id)));
+  const rest = GIFTS.filter((g) => !placed.has(g.id));
+  if (rest.length) groups.push({ name: "Inne", items: rest });
+
+  for (const gr of groups) {
+    if (!gr.items.length) continue;
+    const sec = document.createElement("section"); sec.className = "group";
+    const h = document.createElement("h3");
+    const title = document.createElement("span"); title.textContent = gr.name;
+    const n = document.createElement("span"); n.className = "gcount";
+    n.textContent = `kupione ${gr.items.filter((g) => bought.has(g.id)).length} z ${gr.items.length}`;
+    h.append(title, n);
+    const ul = document.createElement("ul"); ul.className = "gifts";
+    for (const g of gr.items) ul.appendChild(giftItem(g));
+    sec.append(h, ul);
+    listEl.appendChild(sec);
+  }
+  $("count").textContent = `Kupione: ${GIFTS.filter((g) => bought.has(g.id)).length} z ${GIFTS.length}`;
+  renderBar();
+}
+
+function giftItem(g) {
+  {
     const done = bought.has(g.id);
     const li = document.createElement("li");
     li.className = "gift" + (done ? " done" : "") + (selected.has(g.id) ? " selected" : "");
@@ -261,10 +302,8 @@ function render() {
     info.append(lab, shop, a);
 
     li.append(thumb, info, pick);
-    listEl.appendChild(li);
+    return li;
   }
-  $("count").textContent = `Kupione: ${GIFTS.filter((g) => bought.has(g.id)).length} z ${GIFTS.length}`;
-  renderBar();
 }
 
 function plural(n) {
